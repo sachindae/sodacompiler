@@ -1,0 +1,11 @@
+# Ignore object files
+*.o
+*.swp
+
+# Ignore everything without an extension
+*
+!*/
+!*.*
+
+# Makefile should be included
+!Makefile
