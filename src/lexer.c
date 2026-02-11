@@ -47,7 +47,6 @@ TokenList* lex(const char* file_path) {
 						// Token is a KEYWORD
 						token = (Token *) malloc(sizeof(Token));
 						*token = (Token){KEYWORD, token_val, lexer.line_num};
-						printf("Added token: %s\n", token_val);
 						break;
 					}
 				}
@@ -56,7 +55,6 @@ TokenList* lex(const char* file_path) {
 				// Token must be IDENTIFIER
 				token = (Token *) malloc(sizeof(Token));
 				*token = (Token){IDENTIFIER, token_val, lexer.line_num};
-				printf("Added token: %s\n", token_val);
 			}
 
 			// Add token to list
@@ -78,8 +76,23 @@ TokenList* lex(const char* file_path) {
 			*token = (Token){COLON, token_val, lexer.line_num};
 			
 			// Add token to list
+			add_token(token, tokens);	
+		} else if (peek(&lexer, 0) == '(') {
+			consume(&lexer);
+			const char* token_val = "(";
+			Token* token = (Token *) malloc(sizeof(Token));
+			*token = (Token){LEFTPAREN, token_val, lexer.line_num};
+			
+			// Add token to list
 			add_token(token, tokens);
-			printf("Added token: %s\n", token_val);
+		} else if (peek(&lexer, 0) == ')') {
+			consume(&lexer);
+			const char* token_val = ")";
+			Token* token = (Token *) malloc(sizeof(Token));
+			*token = (Token){RIGHTPAREN, token_val, lexer.line_num};
+			
+			// Add token to list
+			add_token(token, tokens);
 		} else if (peek(&lexer, 0) == '=' || peek(&lexer, 0) == '+' || peek(&lexer, 0) == '-' || peek(&lexer, 0) == '/' || peek(&lexer, 0) == '*') {
 			char* token_val = (char *) malloc(2);
 			token_val[0] = peek(&lexer, 0);
@@ -90,7 +103,6 @@ TokenList* lex(const char* file_path) {
 
 			// Add token to list
 			add_token(token, tokens);
-			printf("Added token: %s\n", token_val);
 		} else if (isdigit(peek(&lexer, 0))) {
 			
 			// Read till hit non-digit
@@ -112,7 +124,6 @@ TokenList* lex(const char* file_path) {
 			token_val[end_pos - start_pos] = '\0';
 			Token* token = (Token *) malloc(sizeof(Token));
 			*token = (Token){INTEGER, token_val, lexer.line_num};
-			printf("Added token: %s\n", token_val);
 
 			// Add token to list
 			add_token(token, tokens);
@@ -156,6 +167,8 @@ void add_token(Token* token, TokenList* list) {
 	}
 	list->tokens[list->count] = *token;
 	list->count++;
+	
+	printf("Added token: %s\n", token->value);
 }
 
 const char* read_file(const char* file_path) {
