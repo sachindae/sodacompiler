@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
 
 #include "lexer.h"
@@ -93,13 +94,45 @@ TokenList* lex(const char* file_path) {
 			
 			// Add token to list
 			add_token(token, tokens);
-		} else if (peek(&lexer, 0) == '=' || peek(&lexer, 0) == '+' || peek(&lexer, 0) == '-' || peek(&lexer, 0) == '/' || peek(&lexer, 0) == '*') {
+		} else if (peek(&lexer, 0) == '=') {
+			consume(&lexer);
+
+			bool is_comparison_op = false;
+			if (peek(&lexer, 0) == '=') {
+				consume(&lexer);
+				is_comparison_op = true;
+			}
+
+			if (!isspace(peek(&lexer, 0))) {
+				perror("Invalid token after equal operator");
+				return NULL;
+			}
+			
+			char* token_val;
+			Token* token = (Token *) malloc(sizeof(Token));
+			if (is_comparison_op){
+				token_val = "==";
+				*token = (Token){COMPARISON_OP, token_val, lexer.line_num};
+			} else {
+				token_val = "=";
+				*token = (Token){ASSIGNMENT_OP, token_val, lexer.line_num};
+			}
+
+
+			// Add token to list
+			add_token(token, tokens);	
+		} else if (peek(&lexer, 0) == '+' || peek(&lexer, 0) == '-' || peek(&lexer, 0) == '/' || peek(&lexer, 0) == '*') {
 			char* token_val = (char *) malloc(2);
 			token_val[0] = peek(&lexer, 0);
 			token_val[1] = '\0';
 			consume(&lexer);
 			Token* token = (Token *) malloc(sizeof(Token));
 			*token = (Token){OPERATOR, token_val, lexer.line_num};
+
+			if (!isspace(peek(&lexer, 0))) {
+				perror("Invalid token after operator");
+				return NULL;
+			}
 
 			// Add token to list
 			add_token(token, tokens);
@@ -147,7 +180,7 @@ TokenList* lex(const char* file_path) {
 
 	// Print out all tokens
 	for (int i = 0; i < tokens->count; i++) {
-		printf("Token %d (%s): %s\n", i, TOKEN_TYPE_TO_STR(tokens->tokens[i].type), tokens->tokens[i].value);
+		printf("Token %d (%s) Line (%d): %s\n", i, TOKEN_TYPE_TO_STR(tokens->tokens[i].type), tokens->tokens[i].line_num, tokens->tokens[i].value);
 	}
 }
 
@@ -223,6 +256,8 @@ const char* TOKEN_TYPE_TO_STR(TokenType type) {
         case KEYWORD:      return "KEYWORD";
         case IDENTIFIER:   return "IDENTIFIER";
         case OPERATOR:     return "OPERATOR";
+	case ASSIGNMENT_OP: return "ASSIGNMENT_OP";
+	case COMPARISON_OP: return "COMPARISON_OP";
         case INTEGER:      return "INTEGER";
         case FLOAT:        return "FLOAT";
         case STRING:       return "STRING";

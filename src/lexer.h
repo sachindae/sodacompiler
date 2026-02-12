@@ -6,7 +6,9 @@
 typedef enum {
 	KEYWORD,		// “let”, “while”, “if”, “else”, “int”, “float”, “char”, “fn”
 	IDENTIFIER, 		// {a-zA-Z}+{...}
-	OPERATOR,		// “=”, “+”, “-”, “/”, “*”
+	OPERATOR,		// “+”, “-”, “/”, “*”
+	ASSIGNMENT_OP,		// "="
+	COMPARISON_OP,		// "==", ">=", ">", "<=", "<'
 	INTEGER, 		// “1”, “100”, etc
 	FLOAT,			// “3.23”, “100.1”, etc.
 	STRING,			// “word”, etc.
