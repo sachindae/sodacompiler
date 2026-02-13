@@ -1,5 +1,7 @@
 #include "lexer.h"
+#include "parser.h"
 
 int main(int argc, char *argv[]){
-	lex("hello.soda");
+	TokenList* tokens = lex("hello.soda");
+	parse(tokens);
 }
