@@ -3,158 +3,57 @@
 #ifndef AST_H
 #define AST_H
 
-typedef enum {
-	ARG_INTEGER,
-	ARG_FLOAT,
-	ARG_STRING,
-} ArgType;
-
-typedef struct {
-	ArgType type;
-	Token identifer;
-} Arg;
-
-typedef enum {
-	FUNC_PARAM_ARG,
-	FUNC_PARAM_MULTI,
-} FuncParamsType;
-
-typedef struct {
-	FuncParamsType type;
-	union {
-		struct {
-			Arg arg;
-		} arg;
-
-		struct {
-			Arg arg;
-			FuncParamsType* params;
-		} params;
-	} as;
-} FuncParams;
-
-typedef struct {
-	Token identifier;
-	FuncParams params;
-} DeclarationFunc;
-
-typedef enum {
-	PRIM_ID,
-	PRIM_INT,
-	PRIM_FLOAT,
-	PRIM_STRING,
-} PrimaryType;
-
-typedef struct {
-	PrimaryType type;
-	union {
-		struct {
-			Token identifier;
-		} id;
-
-		struct {
-			Token _int;
-		} _int;
-
-		struct {
-			Token _float;
-		} _float;
-
-		struct {
-			Token _string;
-		} _string;
-	} as;
-} Primary;
-
-typedef enum {
-	EXPR_PRIMARY,
-	EXPR_OP,
-} ExpressionType;
-
 typedef struct Expression Expression;
 
-struct Expression {
-	ExpressionType type;
-	union {
-		struct {
-			Primary p;
-		} primary;
+typedef struct {
+	const char op;
+	unsigned int line_num;
+} Operator;
 
-		struct {
-			Primary p;
-			Token op;
-			Expression* expr;
-		} op;
+typedef struct {
+	const char* id;
+	unsigned int line_num;
+} Identifier;
+
+typedef struct {
+	Expression* expr1;
+	Operator op;
+	Expression* expr2;
+	unsigned int line_num;
+} BinaryExpr;
+
+struct Expression {
+	enum { INT_LITERAL, FLOAT_LITERAL, STRING_LITERAL, EXPR_IDENTIFIER, BINARY_EXPR } type;
+	union {
+		int int_literal;
+		float float_literal;
+		const char* string_literal;
+		Identifier identifier;
+		BinaryExpr binary_expr;
 	} as;
+	unsigned int line_num;
 };
 
 typedef struct {
-	Token identifier;
-	Token type;
-	Expression expr;
-} DeclarationVar;
-
-typedef enum {
-	DECL_FUNC,
-	DECL_VAR,
-} DeclarationType;
+	Identifier identifier;
+	Expression value;
+	unsigned int line_num;
+} VarDeclaration;
 
 typedef struct {
-	const DeclarationType type;
+	enum {
+		VAR_DECL,
+	} type;
+
 	union {
-		struct {
-			DeclarationFunc decl;
-		} func_declaration;
-
-		struct {
-			DeclarationVar decl;
-		} var_declaration;
-	} as;
-} Declaration;
-
-typedef enum {
-	STMT_DECLARATION,
-	STMT_IF,
-	STMT_WHILE,
-	STMT_ASSIGNMENT,
-	STMT_FN_CALL,
-	STMT_RETURN,
-} StatementType;
-
-typedef struct {
-	const StatementType type;
-	union {
-		struct {
-			Declaration declaration;
-		} declaration;
-
-		/*
-		struct {
-			StatementIf statement;
-		} _if;
-
-		struct {
-			StatementWhile statement;
-		} _while;
-
-		struct {
-			Assignment assignment;
-		} assignment;
-
-		struct {
-			FnCall fn_call;
-		} fn_call;
-
-		struct {
-			Return _return;
-		} _return;
-		*/
+		VarDeclaration var_decl;
 	} as;
 } Statement;
 
 typedef struct {
-
-} Program;
-
+	Statement** statements;
+	size_t count;
+	size_t capacity;
+} ProgramAST;
 
 #endif // AST_H
