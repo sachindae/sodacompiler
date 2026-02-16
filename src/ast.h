@@ -36,7 +36,7 @@ struct Expression {
 
 typedef struct {
 	Identifier identifier;
-	Expression value;
+	Expression* value;
 	unsigned int line_num;
 } VarDeclaration;
 

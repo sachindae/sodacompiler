@@ -51,7 +51,7 @@ void add_statement(Statement* statement, ProgramAST* ast) {
 	ast->statements = &statement;
 	ast->count++;
 	
-	printf("Added statement: %u\n", statement->type);
+	printf("Added statement: %u %s\n", statement->type, statement->as.var_decl.identifier.id);
 }
 
 Statement* parse_statement(Parser* parser) {
@@ -93,15 +93,15 @@ Statement* parse_var_declaration(Parser* parser, Token* let_token) {
 	
 	// Validate colon comes up
 	Token colon = peek_parser(parser, 0);
-	if (identifier.type != COLON) {
-		printf("[Parse var declaration] Invalid token for colon (line %u): %s\n", colon.line_num, colon.value);
+	if (colon.type != COLON) {
+		printf("[Parse var declaration] Invalid token for colon (line %u): %s %u\n", colon.line_num, colon.value, colon.type);
 		return NULL;
 	}
 	consume_parser(parser);
 
 	// Validate type comes up
 	Token type = peek_parser(parser, 0);
-	if (type.type != KEYWORD || (strcmp(type.value, "int") == 0 || strcmp(type.value, "float") == 0 || strcmp(type.value, "string") == 0)) {
+	if (type.type != KEYWORD || (strcmp(type.value, "int") != 0 && strcmp(type.value, "float") != 0 && strcmp(type.value, "string") != 0)) {
 		printf("[Parse var declaration] Invalid token for type (line %u): %s\n", type.line_num, type.value);
 		return NULL;
 	}
@@ -109,18 +109,66 @@ Statement* parse_var_declaration(Parser* parser, Token* let_token) {
 	
 	// Validate assignment op comes up
 	Token assignment_op = peek_parser(parser, 0);
-	if (assignment_op.type != COLON) {
+	if (assignment_op.type != ASSIGNMENT_OP) {
 		printf("[Parse var declaration] Invalid token for assignment_op (line %u): %s\n", assignment_op.line_num, assignment_op.value);
 		return NULL;
 	}
 	consume_parser(parser);
 
 	// Validate expression comes up
-	Expression expr = parse_expression(parser);
+	Expression* expr = parse_expression(parser);
+	
+	// Validate semi colon comes up
+	Token semi_colon = peek_parser(parser, 0);
+	if (semi_colon.type != SEMICOLON) {
+		printf("[Parse var declaration] Invalid token for semi colon (line %u): %s\n", semi_colon.line_num, semi_colon.value);
+		return NULL;
+	}
+	consume_parser(parser);
+	
+	VarDeclaration* var_declaration = malloc(sizeof(VarDeclaration));
+	var_declaration->identifier = (Identifier) {.id = identifier.value, .line_num = identifier.line_num};
+	var_declaration->value = expr;
+	var_declaration->line_num = var_declaration->identifier.line_num; 
 
+	// Create Statement object
+	Statement* return_val = malloc(sizeof(Statement));
+	return_val->type = VAR_DECL;
+	return_val->as.var_decl = *var_declaration;
+	return return_val;
 }
 
+// Expression can be literal, identifier or binaryexpr(expr, op, expr)
 Expression* parse_expression(Parser* parser) {
-	
+	printf("Parssing expression fn start...\n");
+	Expression* left = malloc(sizeof(Expression));
+	Token left_token = peek_parser(parser, 0);
+	if (left_token.type == IDENTIFIER) {
+		printf("Parssing expression found identifier...\n");
+		left->type = EXPR_IDENTIFIER;
+		left->as.identifier.id = left_token.value;
+		left->as.identifier.line_num = left_token.line_num;
+	} else if (left_token.type == INTEGER) {
+		printf("Parssing expression found integer...\n");
+		left->type = INT_LITERAL;
+		left->as.int_literal = atoi(left_token.value); 
+	} else if (left_token.type == FLOAT) {
+		printf("Parssing expression found float...\n");
+		left->type = FLOAT_LITERAL;
+		left->as.float_literal = atof(left_token.value);
+	} else if (left_token.type == STRING) {
+		printf("Parssing expression found string..\n");
+		left->type = STRING_LITERAL;
+		left->as.string_literal = left_token.value;
+	} else {
+		printf("Invalid parse expression for token: %s\n", left_token.value);
+		return NULL;
+	}
+	consume_parser(parser);
+
+	// TODO: Parse op
+	//
+
+	return left;
 }
 
