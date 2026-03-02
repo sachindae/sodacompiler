@@ -6,7 +6,7 @@
 typedef struct Expression Expression;
 
 typedef struct {
-	const char op;
+	const char* op;
 	unsigned int line_num;
 } Operator;
 

@@ -166,9 +166,65 @@ Expression* parse_expression(Parser* parser) {
 	}
 	consume_parser(parser);
 
+	// Parse op
+	Token maybe_op = peek_parser(parser, 0);
+	if (maybe_op.type != OPERATOR && maybe_op.type != COMPARISON_OP) {
+		printf("No op in expression, parse finished\n");
+		return left;
+	}
+	consume_parser(parser);
+
+	Expression* right = malloc(sizeof(Expression));
+	right = parse_expression(parser);
+
+	// Create Binary op
+	Expression* binary_op = malloc(sizeof(Expression));
+	binary_op->type = BINARY_EXPR;
+	binary_op->as.binary_expr = (BinaryExpr) {
+		.expr1 = left,
+		.op = (Operator) {
+			.op = maybe_op.value,
+			.line_num = maybe_op.line_num
+		},
+		.expr2 = right
+	};
+	printf("Created a binary op with op: %s\n", binary_op->as.binary_expr.op.op);
+
+	return binary_op;
+}
+
+// Expression can be literal, identifier or binaryexpr(expr, op, expr)
+Expression* parse_expression_op(Parser* parser) {
+	printf("Parssing expression fn start...\n");
+	Expression* left = malloc(sizeof(Expression));
+	Token left_token = peek_parser(parser, 0);
+	if (left_token.type == IDENTIFIER) {
+		printf("Parssing expression found identifier...\n");
+		left->type = EXPR_IDENTIFIER;
+		left->as.identifier.id = left_token.value;
+		left->as.identifier.line_num = left_token.line_num;
+	} else if (left_token.type == INTEGER) {
+		printf("Parssing expression found integer...\n");
+		left->type = INT_LITERAL;
+		left->as.int_literal = atoi(left_token.value); 
+	} else if (left_token.type == FLOAT) {
+		printf("Parssing expression found float...\n");
+		left->type = FLOAT_LITERAL;
+		left->as.float_literal = atof(left_token.value);
+	} else if (left_token.type == STRING) {
+		printf("Parssing expression found string..\n");
+		left->type = STRING_LITERAL;
+		left->as.string_literal = left_token.value;
+	} else {
+		printf("Invalid parse expression for token: %s\n", left_token.value);
+		return NULL;
+	}
+	consume_parser(parser);
+
 	// TODO: Parse op
 	//
 
 	return left;
 }
+
 
