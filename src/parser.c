@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "ast.h"
 #include "lexer.h"
@@ -48,7 +49,7 @@ void add_statement(Statement* statement, ProgramAST* ast) {
 		ast->statements = realloc(ast->statements, ast->capacity * sizeof(Statement*));
 	}
 
-	ast->statements = &statement;
+	ast->statements[ast->count] = statement;
 	ast->count++;
 	
 	printf("Added statement: %u %s\n", statement->type, statement->as.var_decl.identifier.id);
@@ -71,7 +72,7 @@ Statement* parse_statement(Parser* parser) {
 	if (strcmp(cur_token.value, "let") == 0) {
 		return parse_var_declaration(parser, &cur_token);
 	} else if (strcmp(cur_token.value, "fn") == 0) {
-		printf("Appears to be func declaration\n");
+		return parse_func_declaration(parser, &cur_token);
 	}
 
 }
@@ -135,6 +136,130 @@ Statement* parse_var_declaration(Parser* parser, Token* let_token) {
 	Statement* return_val = malloc(sizeof(Statement));
 	return_val->type = VAR_DECL;
 	return_val->as.var_decl = *var_declaration;
+	return return_val;
+}
+
+/**
+ * Example is fn add(a: int, b: int): int { }
+ */
+Statement* parse_func_declaration(Parser* parser, Token* func_token) {
+	printf("Parsing func declaration...\n");
+	
+	// Validate identifier comes up
+	Token identifier = peek_parser(parser, 0);
+	if (identifier.type != IDENTIFIER) {
+		printf("[Parse func declaration] Invalid token for identifier (line %u): %s\n", identifier.line_num, identifier.value);
+		return NULL;
+	}
+	consume_parser(parser);
+	
+	// Validate left_paren comes up
+	Token left_paren = peek_parser(parser, 0);
+	if (left_paren.type != LEFTPAREN) {
+		printf("[Parse func declaration] Invalid token for left paren (line %u): %s %u\n", left_paren.line_num, left_paren.value, left_paren.type);
+		return NULL;
+	}
+	consume_parser(parser);
+
+	// Identifier loop
+	while (true) {
+		printf("Starting id loop\n");
+
+		// Validate identifier comes up
+		Token loop_identifier = peek_parser(parser, 0);
+		if (loop_identifier.type != IDENTIFIER) {
+			printf("[Parse func declaration] Invalid token for loop_identifier (line %u): %s\n", loop_identifier.line_num, loop_identifier.value);
+			return NULL;
+		}
+		consume_parser(parser);
+
+		// Validate colon comes up
+		Token loop_colon = peek_parser(parser, 0);
+		if (loop_colon.type != COLON) {
+			printf("[Parse func declaration] Invalid token for loop_colon (line %u): %s\n", loop_colon.line_num, loop_colon.value);
+			return NULL;
+		}
+		consume_parser(parser);
+		
+		// Validate type comes up
+		Token loop_type = peek_parser(parser, 0);
+		if (loop_type.type != KEYWORD || (strcmp(loop_type.value, "int") != 0 && strcmp(loop_type.value, "float") != 0 && strcmp(loop_type.value, "string") != 0)) {
+			printf("[Parse func declaration] Invalid token for loop_type (line %u): %s\n", loop_type.line_num, loop_type.value);
+			return NULL;
+		}
+		consume_parser(parser);
+
+		// TODO: Add identifier to a list of fn params
+		
+		// Check for right paren (end of param list) 
+		Token loop_terminal = peek_parser(parser, 0);
+		if (loop_terminal.type == COMMA) {
+			consume_parser(parser);
+		} else if (loop_terminal.type == RIGHTPAREN) {
+			consume_parser(parser);
+			break;
+		} else {
+			printf("[Parse func declaration] Invalid token for loop_terminal (line %u): %s\n", loop_terminal.line_num, loop_terminal.value);
+			return NULL;
+		}
+	}
+
+	// Validate colon comes up
+	Token colon = peek_parser(parser, 0);
+	if (colon.type != COLON) {
+		printf("[Parse func declaration] Invalid token for colon (line %u): %s\n", colon.line_num, colon.value);
+		return NULL;
+	}
+	consume_parser(parser);
+
+	// Validate return type comes up
+	Token return_type = peek_parser(parser, 0);
+	if (return_type.type != KEYWORD || (strcmp(return_type.value, "int") != 0 && strcmp(return_type.value, "float") != 0 && strcmp(return_type.value, "string") != 0)) {
+		printf("[Parse func declaration] Invalid token for return_type (line %u): %s\n", return_type.line_num, return_type.value);
+		return NULL;
+	}
+	consume_parser(parser);
+
+	// Validate left bracket { comes up
+	Token left_bracket = peek_parser(parser, 0);
+	if (left_bracket.type != LEFTBRACKET) {
+		printf("[Parse func declaration] Invalid token for left_bracket (line %u): %s\n", left_bracket.line_num, left_bracket.value);
+		return NULL;
+	}
+	consume_parser(parser);
+
+	// Create function declaration
+	FuncDeclaration* func_declaration = malloc(sizeof(FuncDeclaration));
+	func_declaration->identifier = (Identifier) {.id = identifier.value, .line_num = identifier.line_num};
+	func_declaration->line_num = func_declaration->identifier.line_num; 
+	func_declaration->body = malloc(sizeof(Statement));
+	func_declaration->body_len = 0;
+	func_declaration->body_capacity = 1;
+
+	// TODO: Parse list of statements that may come up
+	while (true) {
+		
+		Statement* body_statement = parse_statement(parser);
+		if (func_declaration->body_len == func_declaration->body_capacity){
+			// Expand array of body statements if needed
+			func_declaration->body_capacity *= 2;
+			func_declaration->body = realloc(func_declaration->body, func_declaration->body_capacity*sizeof(Statement));
+		}
+		func_declaration->body[func_declaration->body_len] = body_statement;
+		func_declaration->body_len++;
+
+		// Check for right bracket (indicates end of statement)
+		Token loop_terminal = peek_parser(parser, 0);
+		if (loop_terminal.type == RIGHTBRACKET) {
+			consume_parser(parser);
+			break;
+		}
+	}
+
+	// Create Statement object
+	Statement* return_val = malloc(sizeof(Statement));
+	return_val->type = FUNC_DECL;
+	return_val->as.func_decl = *func_declaration;
 	return return_val;
 }
 

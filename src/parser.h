@@ -19,6 +19,7 @@ void consume_parser(Parser* parser);
 void add_statement(Statement*, ProgramAST* ast);
 Statement* parse_statement(Parser* parser);
 Statement* parse_var_declaration(Parser* parser, Token* let_token);
+Statement* parse_func_declaration(Parser* parser, Token* func_token);
 Expression* parse_expression(Parser* parser);
 
 #endif // PARSER_H

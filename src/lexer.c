@@ -78,6 +78,22 @@ TokenList* lex(const char* file_path) {
 			
 			// Add token to list
 			add_token(token, tokens);	
+		} else if (peek(&lexer, 0) == '{') {
+			consume(&lexer);
+			const char* token_val = "{";
+			Token* token = (Token *) malloc(sizeof(Token));
+			*token = (Token){LEFTBRACKET, token_val, lexer.line_num};
+			
+			// Add token to list
+			add_token(token, tokens);
+		} else if (peek(&lexer, 0) == '}') {
+			consume(&lexer);
+			const char* token_val = "}";
+			Token* token = (Token *) malloc(sizeof(Token));
+			*token = (Token){RIGHTBRACKET, token_val, lexer.line_num};
+			
+			// Add token to list
+			add_token(token, tokens);
 		} else if (peek(&lexer, 0) == '(') {
 			consume(&lexer);
 			const char* token_val = "(";
@@ -91,6 +107,14 @@ TokenList* lex(const char* file_path) {
 			const char* token_val = ")";
 			Token* token = (Token *) malloc(sizeof(Token));
 			*token = (Token){RIGHTPAREN, token_val, lexer.line_num};
+			
+			// Add token to list
+			add_token(token, tokens);
+		} else if (peek(&lexer, 0) == ',') {
+			consume(&lexer);
+			const char* token_val = ",";
+			Token* token = (Token *) malloc(sizeof(Token));
+			*token = (Token){COMMA, token_val, lexer.line_num};
 			
 			// Add token to list
 			add_token(token, tokens);

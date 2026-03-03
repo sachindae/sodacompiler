@@ -3,7 +3,9 @@
 #ifndef AST_H
 #define AST_H
 
+// Forward declarations
 typedef struct Expression Expression;
+typedef struct Statement Statement;
 
 typedef struct {
 	const char* op;
@@ -14,6 +16,12 @@ typedef struct {
 	const char* id;
 	unsigned int line_num;
 } Identifier;
+
+typedef struct {
+	const char* id;
+	const char* type;
+	unsigned int line_num;
+} FuncParam;
 
 typedef struct {
 	Expression* expr1;
@@ -41,14 +49,24 @@ typedef struct {
 } VarDeclaration;
 
 typedef struct {
+	Identifier identifier;
+	Statement** body;
+	unsigned int body_len;
+	unsigned int body_capacity;
+	unsigned int line_num;
+} FuncDeclaration;
+
+struct Statement {
 	enum {
 		VAR_DECL,
+		FUNC_DECL,
 	} type;
 
 	union {
 		VarDeclaration var_decl;
+		FuncDeclaration func_decl;
 	} as;
-} Statement;
+};
 
 typedef struct {
 	Statement** statements;
