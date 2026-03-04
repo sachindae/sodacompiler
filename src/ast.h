@@ -24,6 +24,22 @@ typedef struct {
 } FuncParam;
 
 typedef struct {
+	enum  {
+		ARG_ID,
+		ARG_FLOAT,
+		ARG_INT,
+		ARG_STRING,
+	} type;
+	union {
+		const char* identifier;
+		int int_val;
+		float float_val;
+		const char* string_val;
+	};
+	unsigned int line_num;
+} FuncArg;
+
+typedef struct {
 	Expression* expr1;
 	Operator op;
 	Expression* expr2;
@@ -44,6 +60,14 @@ struct Expression {
 
 typedef struct {
 	Identifier identifier;
+	FuncArg** args;
+	size_t arg_count;
+	size_t arg_capacity;
+} FuncCall;
+
+typedef struct {
+	Identifier identifier;
+	const char* type;
 	Expression* value;
 	unsigned int line_num;
 } VarDeclaration;
@@ -63,11 +87,13 @@ struct Statement {
 	enum {
 		VAR_DECL,
 		FUNC_DECL,
+		FUNC_CALL,
 	} type;
 
 	union {
 		VarDeclaration var_decl;
 		FuncDeclaration func_decl;
+		FuncCall func_call;
 	} as;
 };
 

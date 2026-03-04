@@ -57,6 +57,8 @@ void add_statement(Statement* statement, ProgramAST* ast) {
 		printf("Added var declaration\n");
 	} else if (statement->type == 1) {
 		printf("Added func declaration with %zu params and %zu statements\n", statement->as.func_decl.param_len, statement->as.func_decl.body_len);
+	} else if (statement->type == 2) {
+		printf("Added func call with %zu args\n", statement->as.func_call.arg_count);
 	}
 }
 
@@ -67,17 +69,20 @@ Statement* parse_statement(Parser* parser) {
 	consume_parser(parser);
 	printf("[Parse Stmt] Token Line (%d): %s\n", cur_token.line_num, cur_token.value);
 
-	// Validate token is a keyword (all statements must being with one)
-	if (cur_token.type != KEYWORD) {
-		printf("Parse statement failed -- token is not a keyword: %s\n", cur_token.value);
-		return NULL;
-	}
-
 	// Determine which route to go to
 	if (strcmp(cur_token.value, "let") == 0) {
-		return parse_var_declaration(parser, &cur_token);
+		return parse_var_declaration(parser);
 	} else if (strcmp(cur_token.value, "fn") == 0) {
-		return parse_func_declaration(parser, &cur_token);
+		return parse_func_declaration(parser);
+	} else if (cur_token.type == IDENTIFIER) {
+		Token next_token = peek_parser(parser, 0);
+		consume_parser(parser);
+		if (next_token.type == LEFTPAREN) {
+			return parse_func_call(parser, &cur_token); 
+		} else {
+			printf("Parse statement failed -- token is not left paran: %s\n", next_token.value);
+			return NULL;
+		}
 	}
 
 }
@@ -86,7 +91,7 @@ Statement* parse_statement(Parser* parser) {
  * Var declaration is the following:
  * let x: int = 10;
  */
-Statement* parse_var_declaration(Parser* parser, Token* let_token) {
+Statement* parse_var_declaration(Parser* parser) {
 	printf("Parsing var declaration...\n");
 	
 	// Validate identifier comes up
@@ -134,6 +139,7 @@ Statement* parse_var_declaration(Parser* parser, Token* let_token) {
 	
 	VarDeclaration* var_declaration = malloc(sizeof(VarDeclaration));
 	var_declaration->identifier = (Identifier) {.id = identifier.value, .line_num = identifier.line_num};
+	var_declaration->type = type.value;
 	var_declaration->value = expr;
 	var_declaration->line_num = var_declaration->identifier.line_num; 
 
@@ -147,7 +153,7 @@ Statement* parse_var_declaration(Parser* parser, Token* let_token) {
 /**
  * Example is fn add(a: int, b: int): int { }
  */
-Statement* parse_func_declaration(Parser* parser, Token* func_token) {
+Statement* parse_func_declaration(Parser* parser) {
 	printf("Parsing func declaration...\n");
 	
 	// Validate identifier comes up
@@ -284,6 +290,87 @@ Statement* parse_func_declaration(Parser* parser, Token* func_token) {
 	Statement* return_val = malloc(sizeof(Statement));
 	return_val->type = FUNC_DECL;
 	return_val->as.func_decl = *func_declaration;
+	return return_val;
+}
+
+/**
+ * Example is foo("hello", a);
+ */
+Statement* parse_func_call(Parser* parser, Token* id_token) {
+	printf("Parsing func call...\n");
+
+	// Create function call
+	FuncCall* func_call = malloc(sizeof(FuncCall));
+	func_call->identifier = (Identifier) {.id = id_token->value, .line_num = id_token->line_num};
+	func_call->args = malloc(sizeof(FuncArg));
+	func_call->arg_count = 0;
+	func_call->arg_capacity = 1;
+
+	// Loop over function args
+	while (true) {
+		Token arg = peek_parser(parser, 0);
+		if (arg.type != IDENTIFIER && arg.type != FLOAT && arg.type != INTEGER && arg.type != STRING) {
+			printf("[Parse func call] Invalid token for arg (line %u): %s\n", arg.line_num, arg.value);
+			return NULL;
+		}
+		consume_parser(parser);
+
+		// Create func arg
+		FuncArg* func_arg = malloc(sizeof(FuncArg));
+		switch (arg.type) {
+			case IDENTIFIER: 
+				func_arg->type = ARG_ID;
+				func_arg->identifier = arg.value;
+				break;
+			case INTEGER:
+				func_arg->type = ARG_INT;
+				func_arg->int_val = atoi(arg.value);
+				break;
+			case FLOAT:
+				func_arg->type = ARG_FLOAT;
+				func_arg->float_val = atof(arg.value);
+				break;
+			case STRING: 
+				func_arg->type = ARG_STRING;
+				func_arg->string_val = arg.value;
+				break;
+			default:
+				printf("Failed parsing func arg: %s\n", arg.value);
+		}
+
+		if (func_call->arg_count == func_call->arg_capacity){
+			// Expand array of func args if needed
+			func_call->arg_capacity *= 2;
+			func_call->args = realloc(func_call->args, func_call->arg_capacity*sizeof(FuncArg));
+		}
+		func_call->args[func_call->arg_count] = func_arg;
+		func_call->arg_count++;
+
+		// Check for right paren (end of param list) 
+		Token loop_terminal = peek_parser(parser, 0);
+		if (loop_terminal.type == COMMA) {
+			consume_parser(parser);
+		} else if (loop_terminal.type == RIGHTPAREN) {
+			consume_parser(parser);
+			break;
+		} else {
+			printf("[Parse func declaration] Invalid token for loop_terminal (line %u): %s\n", loop_terminal.line_num, loop_terminal.value);
+			return NULL;
+		}
+	}
+	
+	// Validate semi colon comes up
+	Token semi_colon = peek_parser(parser, 0);
+	if (semi_colon.type != SEMICOLON) {
+		printf("[Parse func call] Invalid token for semi_colon (line %u): %s\n", semi_colon.line_num, semi_colon.value);
+		return NULL;
+	}
+	consume_parser(parser);
+
+	// Create Statement object
+	Statement* return_val = malloc(sizeof(Statement));
+	return_val->type = FUNC_CALL;
+	return_val->as.func_call = *func_call;
 	return return_val;
 }
 
