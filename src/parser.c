@@ -53,6 +53,11 @@ void add_statement(Statement* statement, ProgramAST* ast) {
 	ast->count++;
 	
 	printf("Added statement: %u %s\n", statement->type, statement->as.var_decl.identifier.id);
+	if (statement->type == 0) {
+		printf("Added var declaration\n");
+	} else if (statement->type == 1) {
+		printf("Added func declaration with %zu params and %zu statements\n", statement->as.func_decl.param_len, statement->as.func_decl.body_len);
+	}
 }
 
 Statement* parse_statement(Parser* parser) {
@@ -161,7 +166,18 @@ Statement* parse_func_declaration(Parser* parser, Token* func_token) {
 	}
 	consume_parser(parser);
 
-	// Identifier loop
+	// Create function declaration
+	FuncDeclaration* func_declaration = malloc(sizeof(FuncDeclaration));
+	func_declaration->params = malloc(sizeof(FuncParam));
+	func_declaration->body = malloc(sizeof(Statement));
+	func_declaration->param_len = 0;
+	func_declaration->param_capacity = 1;
+	func_declaration->body_len = 0;
+	func_declaration->param_capacity = 1;
+	func_declaration->identifier = (Identifier) {.id = identifier.value, .line_num = identifier.line_num};
+	func_declaration->line_num = func_declaration->identifier.line_num; 
+
+	// Func param loop
 	while (true) {
 		printf("Starting id loop\n");
 
@@ -189,7 +205,19 @@ Statement* parse_func_declaration(Parser* parser, Token* func_token) {
 		}
 		consume_parser(parser);
 
+		FuncParam* param = malloc(sizeof(FuncParam));
+		param->id = loop_identifier.value;
+		param->type = loop_type.value;
+		param->line_num = loop_identifier.line_num;
+
 		// TODO: Add identifier to a list of fn params
+		if (func_declaration->param_len == func_declaration->param_capacity){
+			// Expand array of func params if needed
+			func_declaration->param_capacity *= 2;
+			func_declaration->params = realloc(func_declaration->params, func_declaration->param_capacity*sizeof(FuncParam));
+		}
+		func_declaration->params[func_declaration->param_len] = param;
+		func_declaration->param_len++;
 		
 		// Check for right paren (end of param list) 
 		Token loop_terminal = peek_parser(parser, 0);
@@ -228,10 +256,6 @@ Statement* parse_func_declaration(Parser* parser, Token* func_token) {
 	}
 	consume_parser(parser);
 
-	// Create function declaration
-	FuncDeclaration* func_declaration = malloc(sizeof(FuncDeclaration));
-	func_declaration->identifier = (Identifier) {.id = identifier.value, .line_num = identifier.line_num};
-	func_declaration->line_num = func_declaration->identifier.line_num; 
 	func_declaration->body = malloc(sizeof(Statement));
 	func_declaration->body_len = 0;
 	func_declaration->body_capacity = 1;

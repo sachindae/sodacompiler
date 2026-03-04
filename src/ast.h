@@ -50,9 +50,12 @@ typedef struct {
 
 typedef struct {
 	Identifier identifier;
+	FuncParam** params;
+	size_t param_len;
+	size_t param_capacity;
 	Statement** body;
-	unsigned int body_len;
-	unsigned int body_capacity;
+	size_t body_len;
+	size_t body_capacity;
 	unsigned int line_num;
 } FuncDeclaration;
 
