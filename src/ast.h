@@ -59,6 +59,11 @@ struct Expression {
 };
 
 typedef struct {
+	Expression* return_expr;
+	unsigned int line_num;
+} ReturnStatement;
+
+typedef struct {
 	Identifier identifier;
 	FuncArg** args;
 	size_t arg_count;
@@ -88,12 +93,14 @@ struct Statement {
 		VAR_DECL,
 		FUNC_DECL,
 		FUNC_CALL,
+		RETURN_STMT,
 	} type;
 
 	union {
 		VarDeclaration var_decl;
 		FuncDeclaration func_decl;
 		FuncCall func_call;
+		ReturnStatement return_stmt;
 	} as;
 };
 

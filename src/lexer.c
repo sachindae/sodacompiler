@@ -274,7 +274,7 @@ const char* read_file(const char* file_path) {
 }
 
 // Token things
-const char* KEYWORDS[] = {"let", "while", "if", "else", "int", "float", "char", "fn"};
+const char* KEYWORDS[] = {"let", "while", "if", "else", "int", "float", "char", "fn", "return"};
 const int KEYWORDS_COUNT = sizeof(KEYWORDS) / sizeof(KEYWORDS[0]);
 
 const char* TOKEN_TYPE_TO_STR(TokenType type) {

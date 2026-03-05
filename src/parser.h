@@ -21,6 +21,7 @@ Statement* parse_statement(Parser* parser);
 Statement* parse_var_declaration(Parser* parser);
 Statement* parse_func_declaration(Parser* parser);
 Statement* parse_func_call(Parser* parser, Token* id_token);
+Statement* parse_return_statement(Parser* parser);
 Expression* parse_expression(Parser* parser);
 
 #endif // PARSER_H

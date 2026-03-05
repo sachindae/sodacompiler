@@ -59,6 +59,8 @@ void add_statement(Statement* statement, ProgramAST* ast) {
 		printf("Added func declaration with %zu params and %zu statements\n", statement->as.func_decl.param_len, statement->as.func_decl.body_len);
 	} else if (statement->type == 2) {
 		printf("Added func call with %zu args\n", statement->as.func_call.arg_count);
+	} else if (statement->type == 3) {
+		printf("Added return statement\n");
 	}
 }
 
@@ -74,6 +76,8 @@ Statement* parse_statement(Parser* parser) {
 		return parse_var_declaration(parser);
 	} else if (strcmp(cur_token.value, "fn") == 0) {
 		return parse_func_declaration(parser);
+	} else if (strcmp(cur_token.value, "return") == 0) {
+		return parse_return_statement(parser);
 	} else if (cur_token.type == IDENTIFIER) {
 		Token next_token = peek_parser(parser, 0);
 		consume_parser(parser);
@@ -464,3 +468,34 @@ Expression* parse_expression_op(Parser* parser) {
 }
 
 
+/**
+ * Example is return x + 5;
+ */
+Statement* parse_return_statement(Parser* parser) {
+	printf("Parsing return statement...\n");
+	
+	// Parse expression
+	Expression* return_expr = parse_expression(parser);
+	if (return_expr == NULL) {
+		printf("Error parsing return stmt expression\n");
+		return NULL;
+	}
+
+	// Validate semi colon at end
+	Token semi_colon = peek_parser(parser, 0);
+	if (semi_colon.type != SEMICOLON) {
+		printf("[Parse return statement] Invalid token for semi colon (line %u): %s\n", semi_colon.line_num, semi_colon.value);
+		return NULL;
+	}
+	consume_parser(parser);
+
+	ReturnStatement* return_stmt = malloc(sizeof(ReturnStatement));
+	return_stmt->line_num = semi_colon.line_num;
+	return_stmt->return_expr = return_expr;
+
+	// Create Statement
+	Statement* return_val = malloc(sizeof(Statement));
+	return_val->type = RETURN_STMT;
+	return_val->as.return_stmt = *return_stmt;
+	return return_val;
+}	
