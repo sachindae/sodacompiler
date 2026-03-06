@@ -11,7 +11,7 @@ typedef struct {
 
 
 // Public functions
-void parse(const TokenList* tokens);
+ProgramAST* parse(const TokenList* tokens);
 Token peek_parser(Parser* parser, unsigned int offset);
 void consume_parser(Parser* parser);
 

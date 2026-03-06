@@ -1,4 +1,4 @@
-SRC = src/lexer.c src/parser.c
+SRC = src/tac.c src/lexer.c src/parser.c
 TEST_SRC = test/test_lexer.c
 
 compiler: $(SRC) src/main.c

@@ -7,7 +7,7 @@
 #include "lexer.h"
 #include "parser.h"
 
-void parse(const TokenList* tokens) {
+ProgramAST* parse(const TokenList* tokens) {
 	printf("Starting parsing...\n");
 
 	Parser parser = {
@@ -15,20 +15,20 @@ void parse(const TokenList* tokens) {
 		.cur_pos = 0,
 	};
 
-	ProgramAST ast = {
-		.statements = malloc(sizeof(Statement*) * 10),
-		.count = 0,
-		.capacity = 10, 
-	};
+	ProgramAST* ast = malloc(sizeof(ProgramAST));
+	ast->statements = malloc(sizeof(Statement*) * 10);
+	ast->count = 0;
+	ast->capacity = 10; 
 
 	while (parser.cur_pos < parser.tokens->count) {
 		Token cur_token = peek_parser(&parser, 0);
 		printf("[Main Loop] Token Line (%d): %s\n", cur_token.line_num, cur_token.value);
 		
 		Statement* statement = parse_statement(&parser);
-		add_statement(statement, &ast);
+		add_statement(statement, ast);
 	}
 
+	return ast;
 }
 
 Token peek_parser(Parser* parser, unsigned int offset) {
