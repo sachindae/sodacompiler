@@ -202,11 +202,6 @@ TokenList* lex(const char* file_path) {
 		}
 	}
 
-	// Print out all tokens
-	for (int i = 0; i < tokens->count; i++) {
-		printf("Token %d (%s) Line (%d): %s\n", i, TOKEN_TYPE_TO_STR(tokens->tokens[i].type), tokens->tokens[i].line_num, tokens->tokens[i].value);
-	}
-
 	return tokens;
 }
 

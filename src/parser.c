@@ -306,6 +306,7 @@ Statement* parse_func_call(Parser* parser, Token* id_token) {
 	// Create function call
 	FuncCall* func_call = malloc(sizeof(FuncCall));
 	func_call->identifier = (Identifier) {.id = id_token->value, .line_num = id_token->line_num};
+	func_call->line_num = id_token->line_num;
 	func_call->args = malloc(sizeof(FuncArg));
 	func_call->arg_count = 0;
 	func_call->arg_capacity = 1;
@@ -499,3 +500,16 @@ Statement* parse_return_statement(Parser* parser) {
 	return_val->as.return_stmt = *return_stmt;
 	return return_val;
 }	
+
+void print_statement(Statement* statement) {
+	if (statement->type == VAR_DECL) {
+		printf("(Line %u) VarDeclaration(Id=%s, )\n", statement->as.var_decl.line_num, statement->as.var_decl.identifier.id);
+	} else if (statement->type == FUNC_DECL) {
+		printf("(Line %u) FuncDeclaration(Id=%s, )\n", statement->as.func_decl.line_num, statement->as.func_decl.identifier.id);
+	} else if (statement->type == FUNC_CALL) {
+		printf("(Line %u) FuncCall(Id=%s, )\n", statement->as.func_call.line_num, statement->as.func_call.identifier.id);
+	} else if (statement->type == RETURN_STMT) {
+		printf("(Line %u) ReturnStatement(TODO)\n", statement->as.return_stmt.line_num);
+	}
+}
+

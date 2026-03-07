@@ -68,6 +68,7 @@ typedef struct {
 	FuncArg** args;
 	size_t arg_count;
 	size_t arg_capacity;
+	unsigned int line_num;
 } FuncCall;
 
 typedef struct {

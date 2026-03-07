@@ -23,5 +23,6 @@ Statement* parse_func_declaration(Parser* parser);
 Statement* parse_func_call(Parser* parser, Token* id_token);
 Statement* parse_return_statement(Parser* parser);
 Expression* parse_expression(Parser* parser);
+void print_statement(Statement* statement);
 
 #endif // PARSER_H
