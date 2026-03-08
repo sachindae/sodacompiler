@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "symbol_table.h"
 
 #ifndef TAC_H
 #define TAC_H
@@ -76,12 +77,19 @@ typedef struct {
 
 typedef struct {
 	Tac** tac_list;
+	size_t count;
+	size_t capacity;
 } ProgramTAC;
 
 // Public functions
-void ast_to_tac(ProgramAST* ast);
+ProgramTAC* ast_to_tac(ProgramAST* ast);
+Tac* statement_to_tac(Statement* statement, SymbolTable* sym_table);
 
 // Private functions
 void print_tac(Tac* tac);
+Tac* var_decl_tac(VarDeclaration var_decl, SymbolTable* sym_table);
+Tac* func_decl_tac(FuncDeclaration func_decl, SymbolTable* sym_table);
+Tac* func_call_tac(FuncCall func_call, SymbolTable* sym_table);
+Tac* ret_stmt_tac(ReturnStatement return_stmt, SymbolTable* sym_table);
 
 #endif // TAC_H

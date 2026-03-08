@@ -2,6 +2,7 @@
 #include "lexer.h"
 #include "ast.h"
 #include "parser.h"
+#include "tac.h"
 
 void print_tokens(TokenList* tokens) {
 	for (int i = 0; i < tokens->count; i++) {
@@ -21,4 +22,6 @@ int main(int argc, char *argv[]){
 
 	print_tokens(tokens);
 	print_ast(ast);
+	
+	ProgramTAC* tac = ast_to_tac(ast);
 }
